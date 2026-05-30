@@ -57,7 +57,7 @@ const defaultFileApi: FileApi = {
   saveAs: saveMarkdownFileAs
 };
 
-const defaultFeedbackUrl = import.meta.env.VITE_FEEDBACK_URL || "https://github.com/issues";
+const defaultFeedbackUrl = import.meta.env.VITE_FEEDBACK_URL || "https://github.com/Tangc/htmlxmarkdown/issues";
 
 export default function App({
   initialDocument,
