@@ -71,6 +71,7 @@ const defaultFileApi: FileApi = {
 const defaultFeedbackUrl =
   import.meta.env.VITE_FEEDBACK_URL || "https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml";
 
+const guideSourceUrl = "https://www.lennysnewsletter.com/p/html-is-the-new-markdown-how-anthropic";
 const guideSeenStorageKey = "htmlxmarkdown.guideSeen.v1";
 
 const complexSampleMarkdown = [
@@ -311,7 +312,10 @@ export default function App({
           <UsageGuide
             title={copy.guideTitle}
             body={copy.guideBody}
+            context={copy.guideContext}
             detail={copy.guideDetail}
+            sourceLabel={copy.guideSource}
+            sourceUrl={guideSourceUrl}
             closeLabel={copy.gotIt}
             closeIconLabel={copy.closeGuide}
             onClose={closeGuide}
@@ -469,7 +473,10 @@ export default function App({
         <UsageGuide
           title={copy.guideTitle}
           body={copy.guideBody}
+          context={copy.guideContext}
           detail={copy.guideDetail}
+          sourceLabel={copy.guideSource}
+          sourceUrl={guideSourceUrl}
           closeLabel={copy.gotIt}
           closeIconLabel={copy.closeGuide}
           onClose={closeGuide}
@@ -482,13 +489,26 @@ export default function App({
 interface UsageGuideProps {
   title: string;
   body: string;
+  context: string;
   detail: string;
+  sourceLabel: string;
+  sourceUrl: string;
   closeLabel: string;
   closeIconLabel: string;
   onClose: () => void;
 }
 
-function UsageGuide({ title, body, detail, closeLabel, closeIconLabel, onClose }: UsageGuideProps) {
+function UsageGuide({
+  title,
+  body,
+  context,
+  detail,
+  sourceLabel,
+  sourceUrl,
+  closeLabel,
+  closeIconLabel,
+  onClose
+}: UsageGuideProps) {
   return (
     <div className="modal-backdrop">
       <section className="usage-dialog" role="dialog" aria-modal="true" aria-labelledby="usage-guide-title">
@@ -498,8 +518,12 @@ function UsageGuide({ title, body, detail, closeLabel, closeIconLabel, onClose }
             <X aria-hidden="true" size={18} />
           </button>
         </div>
+        <p>{context}</p>
         <p>{body}</p>
         <p>{detail}</p>
+        <a className="usage-source-link" href={sourceUrl} target="_blank" rel="noreferrer">
+          {sourceLabel}
+        </a>
         <div className="usage-dialog-actions">
           <button className="tool-button primary" type="button" onClick={onClose}>
             {closeLabel}

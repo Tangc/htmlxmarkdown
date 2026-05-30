@@ -473,6 +473,18 @@ button {
   margin: 12px 0;
 }
 
+.usage-source-link {
+  color: #0f5c53;
+  display: inline-flex;
+  font-weight: 700;
+  margin-top: 4px;
+  text-decoration: none;
+}
+
+.usage-source-link:hover {
+  text-decoration: underline;
+}
+
 .usage-dialog-actions {
   display: flex;
   justify-content: flex-end;

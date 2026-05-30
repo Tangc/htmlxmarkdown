@@ -22,7 +22,9 @@ export type Copy = DynamicCopy & {
   fileAccessTitle: string;
   gotIt: string;
   guideBody: string;
+  guideContext: string;
   guideDetail: string;
+  guideSource: string;
   guideTitle: string;
   language: string;
   languageEnglish: string;
@@ -71,8 +73,11 @@ export const copies: Record<Language, Copy> = {
     gotIt: "Got it",
     guideBody:
       "Open a Markdown file, read it as structured HTML, click any section to edit its original Markdown source, then save back to the file.",
+    guideContext:
+      "Inspired by Anthropic Claude Code engineer Thariq Shihipar's “HTML is the new Markdown” idea: HTML can be the human-facing layer for richer reading and supervision, while Markdown remains the durable source file that agents and tools can edit.",
     guideDetail:
       "Use Test sample to try a complex Markdown document without selecting a local file. Use Reset to return to the unopened state.",
+    guideSource: "Background: HTML is the new Markdown",
     guideTitle: "How to use HTMLxMarkdown",
     language: "Language",
     languageEnglish: "English",
@@ -122,7 +127,10 @@ export const copies: Record<Language, Copy> = {
     fileAccessTitle: "需要 Chromium 文件访问能力",
     gotIt: "知道了",
     guideBody: "打开一个 Markdown 文件，用结构化 HTML 阅读，点击任意章节编辑原始 Markdown 源文，然后保存回文件。",
+    guideContext:
+      "这个工具受 Anthropic Claude Code 工程师 Thariq Shihipar 提出的 “HTML is the new Markdown” 启发：HTML 更适合作为人阅读和监督的界面，Markdown 继续作为可保存、可 diff、可被 agent 和工具修改的源文件。",
     guideDetail: "可以用“测试样例”直接体验复杂 Markdown，不需要选择本地文件。用“恢复初始状态”回到未打开状态。",
+    guideSource: "背景：HTML is the new Markdown",
     guideTitle: "如何使用 HTMLxMarkdown",
     language: "语言",
     languageEnglish: "English",

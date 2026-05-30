@@ -38,6 +38,11 @@ describe("App", () => {
     const { unmount } = render(<App fileAccessSupported />);
 
     expect(screen.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toBeInTheDocument();
+    expect(screen.getByText(/Inspired by Anthropic Claude Code engineer/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Background: HTML is the new Markdown" })).toHaveAttribute(
+      "href",
+      "https://www.lennysnewsletter.com/p/html-is-the-new-markdown-how-anthropic"
+    );
     fireEvent.click(screen.getByRole("button", { name: "Got it" }));
     expect(window.localStorage.getItem("htmlxmarkdown.guideSeen.v1")).toBe("true");
 
