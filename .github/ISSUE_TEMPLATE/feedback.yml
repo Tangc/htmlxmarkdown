@@ -1,0 +1,82 @@
+name: Feedback / 反馈
+description: Share feedback, bugs, or feature requests for HTMLxMarkdown.
+title: "[Feedback]: "
+labels:
+  - feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying HTMLxMarkdown.
+
+        You can write in any language. English and Chinese are both welcome.
+
+        感谢你试用 HTMLxMarkdown。
+
+        可以使用任何语言反馈，英文或中文都可以。
+  - type: dropdown
+    id: type
+    attributes:
+      label: Feedback type / 反馈类型
+      options:
+        - Bug / 问题
+        - Feature request / 功能建议
+        - Usability feedback / 使用体验
+        - Question / 问题咨询
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary / 简要说明
+      description: What happened, or what would you like to see?
+      placeholder: |
+        Example:
+        I opened a long Markdown file and...
+
+        示例：
+        我打开了一份很长的 Markdown 文件，然后...
+    validations:
+      required: true
+  - type: textarea
+    id: document-context
+    attributes:
+      label: Markdown document context / Markdown 文档场景
+      description: What kind of Markdown were you working with?
+      placeholder: |
+        Example:
+        - Skill / prompt / spec / notes / article
+        - Around 500 lines
+        - Contains tables, code blocks, or frontmatter
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: For bugs, list the steps. For feedback, describe your workflow.
+      placeholder: |
+        1. Opened...
+        2. Clicked...
+        3. Expected...
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 期望表现
+      placeholder: What did you expect to happen?
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / 实际表现
+      placeholder: What actually happened?
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / 浏览器
+      placeholder: Chrome 126, Edge 126, etc.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy note / 隐私提示
+      options:
+        - label: I have removed private content from any pasted Markdown or screenshots.
+          required: false

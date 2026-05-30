@@ -21,6 +21,15 @@ describe("App", () => {
     );
   });
 
+  it("uses the GitHub new issue form as the default feedback target", () => {
+    render(<App fileAccessSupported />);
+
+    expect(screen.getByRole("link", { name: /feedback/i })).toHaveAttribute(
+      "href",
+      "https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml"
+    );
+  });
+
   it("defaults to Simplified Chinese when the system language is Chinese", () => {
     render(<App fileAccessSupported preferredLanguages={["zh-CN"]} />);
 
