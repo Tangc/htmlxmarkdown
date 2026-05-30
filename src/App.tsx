@@ -1,4 +1,15 @@
-import { FilePenLine, FileText, FolderOpen, MessageCircle, Save, SaveAll, X } from "lucide-react";
+import {
+  CircleHelp,
+  FilePenLine,
+  FileText,
+  FolderOpen,
+  MessageCircle,
+  RotateCcw,
+  Save,
+  SaveAll,
+  Sparkles,
+  X
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
@@ -60,6 +71,74 @@ const defaultFileApi: FileApi = {
 const defaultFeedbackUrl =
   import.meta.env.VITE_FEEDBACK_URL || "https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml";
 
+const guideSeenStorageKey = "htmlxmarkdown.guideSeen.v1";
+
+const complexSampleMarkdown = [
+  "---",
+  "title: Agent Review Playbook",
+  "owner: HTMLxMarkdown",
+  "tags:",
+  "  - markdown",
+  "  - review",
+  "---",
+  "",
+  "# Agent Review Playbook",
+  "",
+  "A complex Markdown sample for testing reading, section navigation, tables, task lists, and fenced code.",
+  "",
+  "## Review Goals",
+  "",
+  "- Keep Markdown as the source of truth.",
+  "- Use HTML for human review.",
+  "- Preserve unchanged source ranges byte-for-byte.",
+  "",
+  "## Nested Decisions",
+  "",
+  "### Decision Matrix",
+  "",
+  "| Area | Choice | Reason |",
+  "| --- | --- | --- |",
+  "| Editing | Section source | Reliable round trip |",
+  "| Rendering | Sanitized HTML | Avoid script execution |",
+  "| Storage | Local file handle | Private by default |",
+  "",
+  "### Checklist",
+  "",
+  "- [x] Render headings",
+  "- [x] Keep tables readable",
+  "- [ ] Collect real feedback",
+  "",
+  "## Code Fence Safety",
+  "",
+  "```md",
+  "# This heading is inside a code fence",
+  "## It should not become a TOC section",
+  "```",
+  "",
+  "## Notes",
+  "",
+  "> The preview should be readable, but Markdown should remain editable.",
+  "",
+  "Final paragraph with **bold**, `inline code`, and a [feedback link](https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml).",
+  ""
+].join("\n");
+
+function hasSeenGuide() {
+  try {
+    return window.localStorage.getItem(guideSeenStorageKey) === "true";
+  } catch {
+    return true;
+  }
+}
+
+function rememberGuideSeen() {
+  try {
+    window.localStorage.setItem(guideSeenStorageKey, "true");
+  } catch {
+    // Ignore unavailable storage; the modal still closes for this session.
+  }
+}
+
 export default function App({
   initialDocument,
   fileAccessSupported = isFileSystemAccessSupported(),
@@ -73,6 +152,7 @@ export default function App({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusKey>("ready");
   const [statusFileName, setStatusFileName] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(() => !hasSeenGuide());
   const [busy, setBusy] = useState(false);
 
   const selectedBlock = useMemo(
@@ -178,6 +258,29 @@ export default function App({
     setStatusFileName(null);
   }
 
+  function closeGuide() {
+    rememberGuideSeen();
+    setGuideOpen(false);
+  }
+
+  function openGuide() {
+    setGuideOpen(true);
+  }
+
+  function openTestSample() {
+    setDocument(createMarkdownDocument("sample-complex-markdown.md", complexSampleMarkdown));
+    setSelectedBlockId(null);
+    setStatus("opened");
+    setStatusFileName("sample-complex-markdown.md");
+  }
+
+  function resetDocument() {
+    setDocument(null);
+    setSelectedBlockId(null);
+    setStatus("ready");
+    setStatusFileName(null);
+  }
+
   function renderLanguageSelect() {
     return (
       <select
@@ -204,6 +307,16 @@ export default function App({
             {copy.feedback}
           </a>
         </section>
+        {guideOpen ? (
+          <UsageGuide
+            title={copy.guideTitle}
+            body={copy.guideBody}
+            detail={copy.guideDetail}
+            closeLabel={copy.gotIt}
+            closeIconLabel={copy.closeGuide}
+            onClose={closeGuide}
+          />
+        ) : null}
       </main>
     );
   }
@@ -231,6 +344,18 @@ export default function App({
           <button className="tool-button" type="button" onClick={handleSaveAs} disabled={!document || busy}>
             <SaveAll aria-hidden="true" size={18} />
             {copy.saveAs}
+          </button>
+          <button className="tool-button" type="button" onClick={openGuide}>
+            <CircleHelp aria-hidden="true" size={18} />
+            {copy.usage}
+          </button>
+          <button className="tool-button" type="button" onClick={openTestSample}>
+            <Sparkles aria-hidden="true" size={18} />
+            {copy.testSample}
+          </button>
+          <button className="tool-button" type="button" onClick={resetDocument} disabled={!document || busy}>
+            <RotateCcw aria-hidden="true" size={18} />
+            {copy.reset}
           </button>
           {renderLanguageSelect()}
           <a className="tool-button link-button" href={feedbackUrl} target="_blank" rel="noreferrer">
@@ -340,6 +465,47 @@ export default function App({
           )}
         </aside>
       </div>
+      {guideOpen ? (
+        <UsageGuide
+          title={copy.guideTitle}
+          body={copy.guideBody}
+          detail={copy.guideDetail}
+          closeLabel={copy.gotIt}
+          closeIconLabel={copy.closeGuide}
+          onClose={closeGuide}
+        />
+      ) : null}
     </main>
+  );
+}
+
+interface UsageGuideProps {
+  title: string;
+  body: string;
+  detail: string;
+  closeLabel: string;
+  closeIconLabel: string;
+  onClose: () => void;
+}
+
+function UsageGuide({ title, body, detail, closeLabel, closeIconLabel, onClose }: UsageGuideProps) {
+  return (
+    <div className="modal-backdrop">
+      <section className="usage-dialog" role="dialog" aria-modal="true" aria-labelledby="usage-guide-title">
+        <div className="usage-dialog-header">
+          <h2 id="usage-guide-title">{title}</h2>
+          <button className="icon-button" type="button" onClick={onClose} aria-label={closeIconLabel}>
+            <X aria-hidden="true" size={18} />
+          </button>
+        </div>
+        <p>{body}</p>
+        <p>{detail}</p>
+        <div className="usage-dialog-actions">
+          <button className="tool-button primary" type="button" onClick={onClose}>
+            {closeLabel}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }

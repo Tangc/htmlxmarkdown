@@ -10,6 +10,7 @@ export type Copy = DynamicCopy & {
   applySectionEdit: string;
   cancel: string;
   closeEditor: string;
+  closeGuide: string;
   couldNotOpenFile: string;
   couldNotSaveFile: string;
   documentSections: string;
@@ -19,6 +20,10 @@ export type Copy = DynamicCopy & {
   feedback: string;
   fileAccessDescription: string;
   fileAccessTitle: string;
+  gotIt: string;
+  guideBody: string;
+  guideDetail: string;
+  guideTitle: string;
   language: string;
   languageEnglish: string;
   languageSimplifiedChinese: string;
@@ -31,6 +36,7 @@ export type Copy = DynamicCopy & {
   openingFile: string;
   ready: string;
   renderedMarkdown: string;
+  reset: string;
   save: string;
   saveAs: string;
   saveCancelled: string;
@@ -41,7 +47,9 @@ export type Copy = DynamicCopy & {
   sectionEditor: string;
   sectionMarkdownSource: string;
   sections: string;
+  testSample: string;
   unsavedChanges: string;
+  usage: string;
 };
 
 export const copies: Record<Language, Copy> = {
@@ -49,6 +57,7 @@ export const copies: Record<Language, Copy> = {
     applySectionEdit: "Apply section edit",
     cancel: "Cancel",
     closeEditor: "Close editor",
+    closeGuide: "Close guide",
     couldNotOpenFile: "Could not open file",
     couldNotSaveFile: "Could not save file",
     documentSections: "Document sections",
@@ -59,6 +68,12 @@ export const copies: Record<Language, Copy> = {
     fileAccessDescription:
       "HTMLxMarkdown saves directly back to local Markdown files, which currently requires Chrome or Edge with the File System Access API.",
     fileAccessTitle: "Chromium file access required",
+    gotIt: "Got it",
+    guideBody:
+      "Open a Markdown file, read it as structured HTML, click any section to edit its original Markdown source, then save back to the file.",
+    guideDetail:
+      "Use Test sample to try a complex Markdown document without selecting a local file. Use Reset to return to the unopened state.",
+    guideTitle: "How to use HTMLxMarkdown",
     language: "Language",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
@@ -72,6 +87,7 @@ export const copies: Record<Language, Copy> = {
     openingFile: "Opening file...",
     ready: "Ready",
     renderedMarkdown: "Rendered Markdown",
+    reset: "Reset",
     save: "Save",
     saveAs: "Save As",
     saveCancelled: "Save cancelled",
@@ -82,7 +98,9 @@ export const copies: Record<Language, Copy> = {
     sectionEditor: "Section editor",
     sectionMarkdownSource: "Section Markdown source",
     sections: "Sections",
+    testSample: "Test sample",
     unsavedChanges: "Unsaved changes",
+    usage: "Usage",
     opened: (fileName) => `Opened ${fileName}`,
     saved: (fileName) => `Saved ${fileName}`,
     editSection: (title) => `Edit section ${title}`
@@ -91,6 +109,7 @@ export const copies: Record<Language, Copy> = {
     applySectionEdit: "应用章节修改",
     cancel: "取消",
     closeEditor: "关闭编辑器",
+    closeGuide: "关闭使用说明",
     couldNotOpenFile: "无法打开文件",
     couldNotSaveFile: "无法保存文件",
     documentSections: "文档章节",
@@ -101,6 +120,10 @@ export const copies: Record<Language, Copy> = {
     fileAccessDescription:
       "HTMLxMarkdown 会直接保存回本地 Markdown 文件，目前需要 Chrome 或 Edge 支持 File System Access API。",
     fileAccessTitle: "需要 Chromium 文件访问能力",
+    gotIt: "知道了",
+    guideBody: "打开一个 Markdown 文件，用结构化 HTML 阅读，点击任意章节编辑原始 Markdown 源文，然后保存回文件。",
+    guideDetail: "可以用“测试样例”直接体验复杂 Markdown，不需要选择本地文件。用“恢复初始状态”回到未打开状态。",
+    guideTitle: "如何使用 HTMLxMarkdown",
     language: "语言",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
@@ -113,6 +136,7 @@ export const copies: Record<Language, Copy> = {
     openingFile: "正在打开文件...",
     ready: "就绪",
     renderedMarkdown: "渲染后的 Markdown",
+    reset: "恢复初始状态",
     save: "保存",
     saveAs: "另存为",
     saveCancelled: "已取消保存",
@@ -123,7 +147,9 @@ export const copies: Record<Language, Copy> = {
     sectionEditor: "章节编辑器",
     sectionMarkdownSource: "章节 Markdown 源文",
     sections: "章节",
+    testSample: "测试样例",
     unsavedChanges: "有未保存修改",
+    usage: "使用说明",
     opened: (fileName) => `已打开 ${fileName}`,
     saved: (fileName) => `已保存 ${fileName}`,
     editSection: (title) => `编辑章节 ${title}`

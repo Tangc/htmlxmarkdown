@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
+async function skipUsageGuide(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("htmlxmarkdown.guideSeen.v1", "true");
+  });
+}
+
 async function mockFileAccess(page: Page, fileName = "demo.md", source?: string) {
   const markdownSource =
     source ??
@@ -59,6 +65,7 @@ async function mockFileAccess(page: Page, fileName = "demo.md", source?: string)
 }
 
 test("opens, edits, and saves a local Markdown file through mocked file access", async ({ page }) => {
+  await skipUsageGuide(page);
   await mockFileAccess(page);
 
   await page.goto("/");
@@ -84,6 +91,7 @@ test("opens, edits, and saves a local Markdown file through mocked file access",
 });
 
 test("keeps the reader, TOC, and editor usable across desktop and mobile widths", async ({ page }) => {
+  await skipUsageGuide(page);
   await mockFileAccess(page);
 
   await page.setViewportSize({ width: 1440, height: 920 });
@@ -114,6 +122,7 @@ test("keeps the reader, TOC, and editor usable across desktop and mobile widths"
 });
 
 test("lets users switch the interface to Simplified Chinese", async ({ page }) => {
+  await skipUsageGuide(page);
   await page.goto("/");
 
   await expect(page.getByRole("button", { name: "Open Markdown" })).toBeVisible();
@@ -124,6 +133,7 @@ test("lets users switch the interface to Simplified Chinese", async ({ page }) =
 });
 
 test("handles the Tangzhan writing workflow skill as a real long Markdown sample", async ({ page }) => {
+  await skipUsageGuide(page);
   const source = await readFile("samples/tangzhan-writing-workflow.SKILL.md", "utf8");
   await mockFileAccess(page, "tangzhan-writing-workflow.SKILL.md", source);
 
@@ -162,4 +172,27 @@ test("handles the Tangzhan writing workflow skill as a real long Markdown sample
   expect(savedText.startsWith(source.slice(0, blockStart))).toBe(true);
   expect(savedText.endsWith(source.slice(nextBlockStart))).toBe(true);
   expect(savedText).toContain("This line was edited by the HTMLxMarkdown sample test.");
+});
+
+test("shows usage guide, opens the complex sample, and restores the unopened state", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toBeVisible();
+  await page.getByRole("button", { name: "Got it" }).click();
+  await expect(page.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Usage" }).click();
+  await expect(page.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toBeVisible();
+  await page.getByRole("button", { name: "Got it" }).click();
+
+  await page.getByRole("button", { name: "Test sample" }).click();
+  await expect(page.locator(".file-name")).toHaveText("sample-complex-markdown.md");
+  await expect(page.getByRole("heading", { name: "Agent Review Playbook" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nested Decisions" })).toBeVisible();
+  await expect(page.locator(".toc-item").filter({ hasText: "Code Fence Safety" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset" }).click();
+  await expect(page.locator(".file-name")).toHaveText("No file open");
+  await expect(page.getByRole("heading", { name: "Open a local Markdown file" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agent Review Playbook" })).toHaveCount(0);
 });

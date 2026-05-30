@@ -433,6 +433,52 @@ button {
   font-weight: 700;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 25, 23, 0.42);
+}
+
+.usage-dialog {
+  width: min(520px, 100%);
+  border: 1px solid #d9ded6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d252c;
+  box-shadow: 0 22px 70px rgba(19, 30, 28, 0.24);
+  padding: 20px;
+}
+
+.usage-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.usage-dialog h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.usage-dialog p {
+  color: #4e5f59;
+  line-height: 1.62;
+  margin: 12px 0;
+}
+
+.usage-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
 @media (max-width: 1120px) {
   .workspace {
     grid-template-columns: 210px minmax(0, 1fr);

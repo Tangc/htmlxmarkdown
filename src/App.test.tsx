@@ -1,9 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { createMarkdownDocument } from "./domain/markdownDocument";
 
 describe("App", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("shows a clear unsupported-browser state when file access is unavailable", () => {
     render(<App fileAccessSupported={false} />);
 
@@ -28,6 +32,38 @@ describe("App", () => {
       "href",
       "https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml"
     );
+  });
+
+  it("shows the same usage guide on first visit and from the toolbar", () => {
+    const { unmount } = render(<App fileAccessSupported />);
+
+    expect(screen.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Got it" }));
+    expect(window.localStorage.getItem("htmlxmarkdown.guideSeen.v1")).toBe("true");
+
+    unmount();
+    render(<App fileAccessSupported />);
+    expect(screen.queryByRole("dialog", { name: "How to use HTMLxMarkdown" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Usage" }));
+    expect(screen.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toBeInTheDocument();
+  });
+
+  it("opens a complex sample document and restores the unopened state", () => {
+    window.localStorage.setItem("htmlxmarkdown.guideSeen.v1", "true");
+    render(<App fileAccessSupported />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Test sample" }));
+
+    expect(screen.getByText("sample-complex-markdown.md")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Agent Review Playbook" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Nested Decisions" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+    expect(screen.getByText("No file open")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Open a local Markdown file" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Agent Review Playbook" })).not.toBeInTheDocument();
   });
 
   it("defaults to Simplified Chinese when the system language is Chinese", () => {
