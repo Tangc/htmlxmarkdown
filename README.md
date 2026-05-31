@@ -25,6 +25,22 @@ Set `VITE_FEEDBACK_URL` to point the toolbar feedback button at your GitHub Issu
 VITE_FEEDBACK_URL=https://github.com/your-org/htmlxmarkdown/issues npm run dev
 ```
 
+## Search Console and Analytics
+
+Submit this sitemap in Google Search Console:
+
+```text
+https://htmlxmarkdown.com/sitemap.xml
+```
+
+Google Analytics is disabled unless a measurement ID is configured:
+
+```bash
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX npm run build
+```
+
+For Vercel, add `VITE_GA_MEASUREMENT_ID` as a Production environment variable, then redeploy.
+
 ## Build
 
 ```bash
