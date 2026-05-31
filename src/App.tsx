@@ -4,13 +4,14 @@ import {
   FileText,
   FolderOpen,
   MessageCircle,
+  PlayCircle,
   RotateCcw,
   Save,
   SaveAll,
   Sparkles,
   X
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
@@ -29,9 +30,11 @@ import {
   saveMarkdownFileAs,
   type OpenedMarkdownFile
 } from "./lib/fileAccess";
+import { buildFeedbackIssueUrl } from "./lib/feedbackIssue";
 import { copies, detectLanguage, getSystemLanguages, type Language } from "./lib/i18n";
 import "./index.css";
 import complexSampleMarkdown from "../samples/guizang-ppt-skill.SKILL.md?raw";
+import { trackEvent } from "./lib/analytics";
 
 type StatusKey =
   | "ready"
@@ -73,6 +76,7 @@ const defaultFeedbackUrl =
   import.meta.env.VITE_FEEDBACK_URL || "https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml";
 
 const guideSourceUrl = "https://www.lennysnewsletter.com/p/html-is-the-new-markdown-how-anthropic";
+const demoVideoUrl = "/htmlxmarkdown-demo.mp4";
 const guideSeenStorageKey = "htmlxmarkdown.guideSeen.v1";
 
 const complexSampleFileName = "guizang-ppt-skill.SKILL.md";
@@ -107,6 +111,22 @@ function updateDemoUrl(enabled: boolean) {
   }
 }
 
+function getCurrentAppUrl() {
+  if (typeof window === "undefined") return null;
+  return window.location.href;
+}
+
+function getCurrentAppPath() {
+  if (typeof window === "undefined") return null;
+  const { pathname, search, hash } = window.location;
+  return `${pathname}${search}${hash}`;
+}
+
+function getUserAgent() {
+  if (typeof navigator === "undefined") return null;
+  return navigator.userAgent || null;
+}
+
 function hasSeenGuide() {
   try {
     return window.localStorage.getItem(guideSeenStorageKey) === "true";
@@ -130,21 +150,40 @@ export default function App({
   fileApi = defaultFileApi,
   preferredLanguages
 }: AppProps) {
-  const shouldOpenDemo = !initialDocument && isDemoUrl();
+  const [openedFromDemoUrl] = useState(() => !initialDocument && isDemoUrl());
   const [language, setLanguage] = useState<Language>(() => detectLanguage(preferredLanguages ?? getSystemLanguages()));
   const copy = copies[language];
   const [document, setDocument] = useState<MarkdownDocument | null>(() =>
-    initialDocument ?? (shouldOpenDemo ? createComplexSampleDocument() : null)
+    initialDocument ?? (openedFromDemoUrl ? createComplexSampleDocument() : null)
   );
+  const [demoMode, setDemoMode] = useState(openedFromDemoUrl);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [status, setStatus] = useState<StatusKey>(shouldOpenDemo ? "opened" : "ready");
-  const [statusFileName, setStatusFileName] = useState<string | null>(shouldOpenDemo ? complexSampleFileName : null);
-  const [guideOpen, setGuideOpen] = useState(() => !shouldOpenDemo && !hasSeenGuide());
+  const [status, setStatus] = useState<StatusKey>(openedFromDemoUrl ? "opened" : "ready");
+  const [statusFileName, setStatusFileName] = useState<string | null>(openedFromDemoUrl ? complexSampleFileName : null);
+  const [guideOpen, setGuideOpen] = useState(() => !openedFromDemoUrl && !hasSeenGuide());
   const [busy, setBusy] = useState(false);
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
     [document, selectedBlockId]
+  );
+
+  useEffect(() => {
+    if (openedFromDemoUrl) trackEvent("demo_opened", { source: "url" });
+  }, [openedFromDemoUrl]);
+
+  const feedbackHref = useMemo(
+    () =>
+      buildFeedbackIssueUrl(feedbackUrl, {
+        appPath: getCurrentAppPath(),
+        appUrl: getCurrentAppUrl(),
+        demoMode,
+        dirty: document?.dirty ?? false,
+        fileName: document?.fileName ?? null,
+        language,
+        userAgent: getUserAgent()
+      }),
+    [demoMode, document?.dirty, document?.fileName, feedbackUrl, language]
   );
 
   function getStatusText() {
@@ -155,19 +194,27 @@ export default function App({
   }
 
   async function handleOpen() {
+    trackEvent("open_file_clicked", { demo: isDemoUrl() });
     setBusy(true);
     setStatus("openingFile");
     setStatusFileName(null);
     try {
       const opened = await fileApi.open();
-      if (!opened) return;
+      if (!opened) {
+        trackEvent("open_file_cancelled");
+        return;
+      }
       setDocument(createMarkdownDocument(opened.fileName, opened.text, { fileHandle: opened.handle }));
+      setDemoMode(false);
       setSelectedBlockId(null);
       setStatus("opened");
       setStatusFileName(opened.fileName);
+      updateDemoUrl(false);
+      trackEvent("open_file_succeeded", { file_extension: opened.fileName.split(".").pop() ?? "unknown" });
     } catch (error) {
       setStatus(error instanceof DOMException && error.name === "AbortError" ? "openCancelled" : "couldNotOpenFile");
       setStatusFileName(null);
+      trackEvent(error instanceof DOMException && error.name === "AbortError" ? "open_file_cancelled" : "open_file_failed");
     } finally {
       setBusy(false);
     }
@@ -189,9 +236,11 @@ export default function App({
       setDocument((current) => (current ? markDocumentPersisted(current) : current));
       setStatus("saved");
       setStatusFileName(document.fileName);
+      trackEvent("save_file_succeeded", { file_name: document.fileName });
     } catch (error) {
       setStatus(error instanceof DOMException && error.name === "AbortError" ? "saveCancelled" : "couldNotSaveFile");
       setStatusFileName(null);
+      trackEvent(error instanceof DOMException && error.name === "AbortError" ? "save_file_cancelled" : "save_file_failed");
     } finally {
       setBusy(false);
     }
@@ -208,9 +257,13 @@ export default function App({
       setDocument((current) => (current ? markDocumentPersisted(current, fileHandle) : current));
       setStatus("saved");
       setStatusFileName(document.fileName);
+      trackEvent("save_as_file_succeeded", { file_name: document.fileName });
     } catch (error) {
       setStatus(error instanceof DOMException && error.name === "AbortError" ? "saveCancelled" : "couldNotSaveFile");
       setStatusFileName(null);
+      trackEvent(
+        error instanceof DOMException && error.name === "AbortError" ? "save_as_file_cancelled" : "save_as_file_failed"
+      );
     } finally {
       setBusy(false);
     }
@@ -222,6 +275,7 @@ export default function App({
       return current && block ? editBlockDraft(current, blockId, block.draftSource ?? block.source) : current;
     });
     setSelectedBlockId(blockId);
+    trackEvent("edit_section_clicked", { block_id: blockId, file_name: document?.fileName ?? null });
   }
 
   function updateDraft(nextSource: string) {
@@ -235,6 +289,7 @@ export default function App({
     setSelectedBlockId(null);
     setStatus("sectionApplied");
     setStatusFileName(null);
+    trackEvent("apply_section_edit", { file_name: document?.fileName ?? null });
   }
 
   function cancelDraft() {
@@ -252,22 +307,27 @@ export default function App({
 
   function openGuide() {
     setGuideOpen(true);
+    trackEvent("usage_guide_opened");
   }
 
   function openTestSample() {
     setDocument(createComplexSampleDocument());
+    setDemoMode(true);
     setSelectedBlockId(null);
     setStatus("opened");
     setStatusFileName(complexSampleFileName);
     updateDemoUrl(true);
+    trackEvent("demo_opened", { source: "button" });
   }
 
   function resetDocument() {
     setDocument(null);
+    setDemoMode(false);
     setSelectedBlockId(null);
     setStatus("ready");
     setStatusFileName(null);
     updateDemoUrl(false);
+    trackEvent("reset_document", { had_document: Boolean(document) });
   }
 
   function renderLanguageSelect() {
@@ -292,7 +352,7 @@ export default function App({
           <h1>{copy.fileAccessTitle}</h1>
           <p>{copy.fileAccessDescription}</p>
           {renderLanguageSelect()}
-          <a href={feedbackUrl} target="_blank" rel="noreferrer">
+          <a href={feedbackHref} target="_blank" rel="noreferrer">
             {copy.feedback}
           </a>
         </section>
@@ -302,6 +362,9 @@ export default function App({
             body={copy.guideBody}
             context={copy.guideContext}
             detail={copy.guideDetail}
+            trustNote={copy.localFileTrustNote}
+            demoVideoLabel={copy.demoVideo}
+            demoVideoUrl={demoVideoUrl}
             sourceLabel={copy.guideSource}
             sourceUrl={guideSourceUrl}
             closeLabel={copy.gotIt}
@@ -350,7 +413,13 @@ export default function App({
             {copy.reset}
           </button>
           {renderLanguageSelect()}
-          <a className="tool-button link-button" href={feedbackUrl} target="_blank" rel="noreferrer">
+          <a
+            className="tool-button link-button"
+            href={feedbackHref}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent("feedback_clicked", { file_name: document?.fileName ?? null, demo: demoMode })}
+          >
             <MessageCircle aria-hidden="true" size={18} />
             {copy.feedback}
           </a>
@@ -413,10 +482,17 @@ export default function App({
               <FileText aria-hidden="true" size={40} />
               <h1>{copy.openLocalTitle}</h1>
               <p>{copy.openLocalDescription}</p>
-              <button className="tool-button primary" type="button" onClick={handleOpen} disabled={busy}>
-                <FolderOpen aria-hidden="true" size={18} />
-                {copy.open} Markdown
-              </button>
+              <p className="trust-note">{copy.localFileTrustNote}</p>
+              <div className="empty-actions">
+                <button className="tool-button primary" type="button" onClick={handleOpen} disabled={busy}>
+                  <FolderOpen aria-hidden="true" size={18} />
+                  {copy.open} Markdown
+                </button>
+                <a className="tool-button link-button" href={demoVideoUrl} target="_blank" rel="noreferrer">
+                  <PlayCircle aria-hidden="true" size={18} />
+                  {copy.demoVideo}
+                </a>
+              </div>
             </section>
           )}
         </section>
@@ -463,6 +539,9 @@ export default function App({
           body={copy.guideBody}
           context={copy.guideContext}
           detail={copy.guideDetail}
+          trustNote={copy.localFileTrustNote}
+          demoVideoLabel={copy.demoVideo}
+          demoVideoUrl={demoVideoUrl}
           sourceLabel={copy.guideSource}
           sourceUrl={guideSourceUrl}
           closeLabel={copy.gotIt}
@@ -479,6 +558,9 @@ interface UsageGuideProps {
   body: string;
   context: string;
   detail: string;
+  trustNote: string;
+  demoVideoLabel: string;
+  demoVideoUrl: string;
   sourceLabel: string;
   sourceUrl: string;
   closeLabel: string;
@@ -491,6 +573,9 @@ function UsageGuide({
   body,
   context,
   detail,
+  trustNote,
+  demoVideoLabel,
+  demoVideoUrl,
   sourceLabel,
   sourceUrl,
   closeLabel,
@@ -509,9 +594,16 @@ function UsageGuide({
         <p>{context}</p>
         <p>{body}</p>
         <p>{detail}</p>
-        <a className="usage-source-link" href={sourceUrl} target="_blank" rel="noreferrer">
-          {sourceLabel}
-        </a>
+        <p className="trust-note">{trustNote}</p>
+        <div className="usage-links">
+          <a className="usage-source-link" href={demoVideoUrl} target="_blank" rel="noreferrer">
+            <PlayCircle aria-hidden="true" size={17} />
+            {demoVideoLabel}
+          </a>
+          <a className="usage-source-link" href={sourceUrl} target="_blank" rel="noreferrer">
+            {sourceLabel}
+          </a>
+        </div>
         <div className="usage-dialog-actions">
           <button className="tool-button primary" type="button" onClick={onClose}>
             {closeLabel}

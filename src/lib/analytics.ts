@@ -24,3 +24,8 @@ export function initializeAnalytics() {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
   document.head.appendChild(script);
 }
+
+export function trackEvent(eventName: string, parameters: Record<string, string | number | boolean | null> = {}) {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", eventName, parameters);
+}

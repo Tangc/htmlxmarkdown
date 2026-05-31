@@ -170,6 +170,8 @@ button {
 .toc-panel {
   border-width: 0 1px 0 0;
   padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 .toc-panel h2,
@@ -181,6 +183,10 @@ button {
 .toc-list {
   display: grid;
   gap: 4px;
+  margin-top: 14px;
+}
+
+.toc-panel > .muted {
   margin-top: 14px;
 }
 
@@ -412,6 +418,20 @@ button {
   margin: 0;
 }
 
+.empty-actions,
+.usage-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trust-note {
+  max-width: 480px;
+  font-size: 13px;
+}
+
 .unsupported-shell {
   min-height: 100vh;
   display: grid;
@@ -473,9 +493,20 @@ button {
   margin: 12px 0;
 }
 
+.usage-dialog .trust-note {
+  border: 1px solid #d9ded6;
+  border-radius: 7px;
+  background: #f7f9f6;
+  color: #40514c;
+  max-width: none;
+  padding: 10px 12px;
+}
+
 .usage-source-link {
   color: #0f5c53;
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 700;
   margin-top: 4px;
   text-decoration: none;

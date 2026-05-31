@@ -16,6 +16,7 @@ export type Copy = DynamicCopy & {
   documentSections: string;
   edit: string;
   editing: string;
+  demoVideo: string;
   editorPlaceholder: string;
   feedback: string;
   fileAccessDescription: string;
@@ -29,6 +30,7 @@ export type Copy = DynamicCopy & {
   language: string;
   languageEnglish: string;
   languageSimplifiedChinese: string;
+  localFileTrustNote: string;
   noFileOpen: string;
   open: string;
   openCancelled: string;
@@ -65,6 +67,7 @@ export const copies: Record<Language, Copy> = {
     documentSections: "Document sections",
     edit: "Edit",
     editing: "Editing",
+    demoVideo: "Demo video",
     editorPlaceholder: "Select a section to edit its Markdown source.",
     feedback: "Feedback",
     fileAccessDescription:
@@ -82,6 +85,7 @@ export const copies: Record<Language, Copy> = {
     language: "Language",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
+    localFileTrustNote: "Local files stay in your browser. HTMLxMarkdown does not upload them to a backend.",
     noFileOpen: "No file open",
     open: "Open",
     openCancelled: "Open cancelled",
@@ -120,6 +124,7 @@ export const copies: Record<Language, Copy> = {
     documentSections: "文档章节",
     edit: "编辑",
     editing: "正在编辑",
+    demoVideo: "演示视频",
     editorPlaceholder: "选择一个章节来编辑它的 Markdown 源文。",
     feedback: "反馈",
     fileAccessDescription:
@@ -135,6 +140,7 @@ export const copies: Record<Language, Copy> = {
     language: "语言",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
+    localFileTrustNote: "本地文件只会留在浏览器里，HTMLxMarkdown 不会上传到后端。",
     noFileOpen: "未打开文件",
     open: "打开",
     openCancelled: "已取消打开",
