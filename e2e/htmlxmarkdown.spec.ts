@@ -132,29 +132,29 @@ test("lets users switch the interface to Simplified Chinese", async ({ page }) =
   await expect(page.getByText("打开本地 Markdown 文件")).toBeVisible();
 });
 
-test("handles the Tangzhan writing workflow skill as a real long Markdown sample", async ({ page }) => {
+test("handles the Guizang PPT skill as a real long Chinese Markdown sample", async ({ page }) => {
   await skipUsageGuide(page);
-  const source = await readFile("samples/tangzhan-writing-workflow.SKILL.md", "utf8");
-  await mockFileAccess(page, "tangzhan-writing-workflow.SKILL.md", source);
+  const source = await readFile("samples/guizang-ppt-skill.SKILL.md", "utf8");
+  await mockFileAccess(page, "guizang-ppt-skill.SKILL.md", source);
 
   await page.setViewportSize({ width: 1440, height: 920 });
   await page.goto("/");
   await page.getByRole("button", { name: "Open Markdown" }).click();
 
-  await expect(page.locator(".file-name")).toHaveText("tangzhan-writing-workflow.SKILL.md");
-  await expect(page.getByRole("heading", { name: "Tangzhan Writing Workflow" })).toBeVisible();
-  await expect(page.locator(".toc-item")).toHaveCount(20);
+  await expect(page.locator(".file-name")).toHaveText("guizang-ppt-skill.SKILL.md");
+  await expect(page.getByRole("heading", { name: "Magazine Web Ppt" })).toBeVisible();
+  await expect(page.locator(".toc-item")).toHaveCount(34);
 
-  await page.getByRole("button", { name: "Edit section 1. Source Intake" }).click();
-  await expect(page.getByLabel("Section Markdown source")).toContainText("source_status: success | partial | failed");
-  await page.screenshot({ path: "artifacts/tangzhan-skill-sample.png", fullPage: false });
+  await page.getByRole("button", { name: "Edit section Step 2 · 拷贝模板" }).click();
+  await expect(page.getByLabel("Section Markdown source")).toContainText("assets/template-swiss.html");
+  await page.screenshot({ path: "artifacts/guizang-ppt-skill-sample.png", fullPage: false });
 
   const replacement = [
-    "### 1. Source Intake",
+    "### Step 2 · 拷贝模板",
     "",
-    "Accept a real source and record whether extraction succeeded.",
+    "从模板开始创建可运行的单文件网页 PPT。",
     "",
-    "This line was edited by the HTMLxMarkdown sample test.",
+    "这一行由 HTMLxMarkdown 归葬 PPT 中文长样例测试写入。",
     ""
   ].join("\n");
   await page.getByLabel("Section Markdown source").fill(replacement);
@@ -164,14 +164,14 @@ test("handles the Tangzhan writing workflow skill as a real long Markdown sample
   const savedText = await page.evaluate(() =>
     (window as unknown as { __getHtmlxSavedText: () => string }).__getHtmlxSavedText()
   );
-  const blockStart = source.indexOf("### 1. Source Intake");
-  const nextBlockStart = source.indexOf("### 2. Source Structuring");
+  const blockStart = source.indexOf("### Step 2 · 拷贝模板");
+  const nextBlockStart = source.indexOf("#### 2.1 · 必改占位符");
 
   expect(blockStart).toBeGreaterThan(-1);
   expect(nextBlockStart).toBeGreaterThan(blockStart);
   expect(savedText.startsWith(source.slice(0, blockStart))).toBe(true);
   expect(savedText.endsWith(source.slice(nextBlockStart))).toBe(true);
-  expect(savedText).toContain("This line was edited by the HTMLxMarkdown sample test.");
+  expect(savedText).toContain("这一行由 HTMLxMarkdown 归葬 PPT 中文长样例测试写入。");
 });
 
 test("shows usage guide, opens the complex sample, and restores the unopened state", async ({ page }) => {
@@ -186,13 +186,33 @@ test("shows usage guide, opens the complex sample, and restores the unopened sta
   await page.getByRole("button", { name: "Got it" }).click();
 
   await page.getByRole("button", { name: "Test sample" }).click();
-  await expect(page.locator(".file-name")).toHaveText("sample-complex-markdown.md");
-  await expect(page.getByRole("heading", { name: "Agent Review Playbook" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Nested Decisions" })).toBeVisible();
-  await expect(page.locator(".toc-item").filter({ hasText: "Code Fence Safety" })).toBeVisible();
+  await expect(page.locator(".file-name")).toHaveText("guizang-ppt-skill.SKILL.md");
+  await expect(page.getByRole("heading", { name: "Magazine Web Ppt" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "这个 Skill 做什么" })).toBeVisible();
+  await expect(page.locator(".toc-item").filter({ hasText: "瑞士国际主义风" })).toBeVisible();
 
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.locator(".file-name")).toHaveText("No file open");
   await expect(page.getByRole("heading", { name: "Open a local Markdown file" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Agent Review Playbook" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Magazine Web Ppt" })).toHaveCount(0);
+});
+
+test("opens the complex sample from a shareable demo URL and clears it on reset", async ({ page }) => {
+  await page.goto("/?ref=e2e&demo=1");
+
+  await expect(page.getByRole("dialog", { name: "How to use HTMLxMarkdown" })).toHaveCount(0);
+  await expect(page.locator(".file-name")).toHaveText("guizang-ppt-skill.SKILL.md");
+  await expect(page.getByRole("heading", { name: "Magazine Web Ppt" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "这个 Skill 做什么" })).toBeVisible();
+  await expect(page.locator(".toc-item").filter({ hasText: "瑞士国际主义风" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset" }).click();
+
+  await expect(page.locator(".file-name")).toHaveText("No file open");
+  await expect(page.getByRole("heading", { name: "Open a local Markdown file" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Magazine Web Ppt" })).toHaveCount(0);
+
+  const url = new URL(page.url());
+  expect(url.searchParams.has("demo")).toBe(false);
+  expect(url.searchParams.get("ref")).toBe("e2e");
 });

@@ -31,6 +31,7 @@ import {
 } from "./lib/fileAccess";
 import { copies, detectLanguage, getSystemLanguages, type Language } from "./lib/i18n";
 import "./index.css";
+import complexSampleMarkdown from "../samples/guizang-ppt-skill.SKILL.md?raw";
 
 type StatusKey =
   | "ready"
@@ -74,55 +75,37 @@ const defaultFeedbackUrl =
 const guideSourceUrl = "https://www.lennysnewsletter.com/p/html-is-the-new-markdown-how-anthropic";
 const guideSeenStorageKey = "htmlxmarkdown.guideSeen.v1";
 
-const complexSampleMarkdown = [
-  "---",
-  "title: Agent Review Playbook",
-  "owner: HTMLxMarkdown",
-  "tags:",
-  "  - markdown",
-  "  - review",
-  "---",
-  "",
-  "# Agent Review Playbook",
-  "",
-  "A complex Markdown sample for testing reading, section navigation, tables, task lists, and fenced code.",
-  "",
-  "## Review Goals",
-  "",
-  "- Keep Markdown as the source of truth.",
-  "- Use HTML for human review.",
-  "- Preserve unchanged source ranges byte-for-byte.",
-  "",
-  "## Nested Decisions",
-  "",
-  "### Decision Matrix",
-  "",
-  "| Area | Choice | Reason |",
-  "| --- | --- | --- |",
-  "| Editing | Section source | Reliable round trip |",
-  "| Rendering | Sanitized HTML | Avoid script execution |",
-  "| Storage | Local file handle | Private by default |",
-  "",
-  "### Checklist",
-  "",
-  "- [x] Render headings",
-  "- [x] Keep tables readable",
-  "- [ ] Collect real feedback",
-  "",
-  "## Code Fence Safety",
-  "",
-  "```md",
-  "# This heading is inside a code fence",
-  "## It should not become a TOC section",
-  "```",
-  "",
-  "## Notes",
-  "",
-  "> The preview should be readable, but Markdown should remain editable.",
-  "",
-  "Final paragraph with **bold**, `inline code`, and a [feedback link](https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml).",
-  ""
-].join("\n");
+const complexSampleFileName = "guizang-ppt-skill.SKILL.md";
+const demoSearchParam = "demo";
+const demoSearchValue = "1";
+
+function createComplexSampleDocument() {
+  return createMarkdownDocument(complexSampleFileName, complexSampleMarkdown);
+}
+
+function isDemoUrl() {
+  try {
+    return new URL(window.location.href).searchParams.get(demoSearchParam) === demoSearchValue;
+  } catch {
+    return false;
+  }
+}
+
+function updateDemoUrl(enabled: boolean) {
+  try {
+    const url = new URL(window.location.href);
+    if (enabled) {
+      url.searchParams.set(demoSearchParam, demoSearchValue);
+    } else if (!url.searchParams.has(demoSearchParam)) {
+      return;
+    } else {
+      url.searchParams.delete(demoSearchParam);
+    }
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  } catch {
+    // URL state is a convenience; the editor should still work if history is unavailable.
+  }
+}
 
 function hasSeenGuide() {
   try {
@@ -147,13 +130,16 @@ export default function App({
   fileApi = defaultFileApi,
   preferredLanguages
 }: AppProps) {
+  const shouldOpenDemo = !initialDocument && isDemoUrl();
   const [language, setLanguage] = useState<Language>(() => detectLanguage(preferredLanguages ?? getSystemLanguages()));
   const copy = copies[language];
-  const [document, setDocument] = useState<MarkdownDocument | null>(initialDocument ?? null);
+  const [document, setDocument] = useState<MarkdownDocument | null>(() =>
+    initialDocument ?? (shouldOpenDemo ? createComplexSampleDocument() : null)
+  );
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [status, setStatus] = useState<StatusKey>("ready");
-  const [statusFileName, setStatusFileName] = useState<string | null>(null);
-  const [guideOpen, setGuideOpen] = useState(() => !hasSeenGuide());
+  const [status, setStatus] = useState<StatusKey>(shouldOpenDemo ? "opened" : "ready");
+  const [statusFileName, setStatusFileName] = useState<string | null>(shouldOpenDemo ? complexSampleFileName : null);
+  const [guideOpen, setGuideOpen] = useState(() => !shouldOpenDemo && !hasSeenGuide());
   const [busy, setBusy] = useState(false);
 
   const selectedBlock = useMemo(
@@ -269,10 +255,11 @@ export default function App({
   }
 
   function openTestSample() {
-    setDocument(createMarkdownDocument("sample-complex-markdown.md", complexSampleMarkdown));
+    setDocument(createComplexSampleDocument());
     setSelectedBlockId(null);
     setStatus("opened");
-    setStatusFileName("sample-complex-markdown.md");
+    setStatusFileName(complexSampleFileName);
+    updateDemoUrl(true);
   }
 
   function resetDocument() {
@@ -280,6 +267,7 @@ export default function App({
     setSelectedBlockId(null);
     setStatus("ready");
     setStatusFileName(null);
+    updateDemoUrl(false);
   }
 
   function renderLanguageSelect() {
@@ -296,7 +284,7 @@ export default function App({
     );
   }
 
-  if (!fileAccessSupported && !initialDocument) {
+  if (!fileAccessSupported && !document) {
     return (
       <main className="unsupported-shell" lang={language}>
         <section className="unsupported-panel">

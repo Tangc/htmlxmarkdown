@@ -5,6 +5,7 @@ import { createMarkdownDocument } from "./domain/markdownDocument";
 
 describe("App", () => {
   beforeEach(() => {
+    window.history.replaceState(null, "", "/");
     window.localStorage.clear();
   });
 
@@ -60,15 +61,37 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Test sample" }));
 
-    expect(screen.getByText("sample-complex-markdown.md")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Agent Review Playbook" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Nested Decisions" })).toBeInTheDocument();
+    expect(screen.getByText("guizang-ppt-skill.SKILL.md")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Magazine Web Ppt" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "这个 Skill 做什么" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "核心设计原则（哲学）" })).toBeInTheDocument();
+    expect(window.location.search).toBe("?demo=1");
 
     fireEvent.click(screen.getByRole("button", { name: "Reset" }));
 
     expect(screen.getByText("No file open")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Open a local Markdown file" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Agent Review Playbook" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Magazine Web Ppt" })).not.toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
+  it("opens the complex sample immediately from the demo URL and clears only that URL state on reset", () => {
+    window.history.replaceState(null, "", "/?source=share&demo=1#reader");
+
+    render(<App fileAccessSupported={false} />);
+
+    expect(screen.getByText("guizang-ppt-skill.SKILL.md")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Magazine Web Ppt" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "How to use HTMLxMarkdown" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Chromium file access required")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+    expect(screen.getByRole("heading", { name: "Chromium file access required" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Magazine Web Ppt" })).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+    expect(window.location.search).toBe("?source=share");
+    expect(window.location.hash).toBe("#reader");
   });
 
   it("defaults to Simplified Chinese when the system language is Chinese", () => {

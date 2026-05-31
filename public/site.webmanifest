@@ -1,0 +1,17 @@
+{
+  "name": "HTMLxMarkdown",
+  "short_name": "HTMLxMarkdown",
+  "description": "Read local Markdown as polished HTML and edit one section at a time in the browser.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#18766a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
