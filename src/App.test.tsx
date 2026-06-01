@@ -16,6 +16,14 @@ describe("App", () => {
   beforeEach(() => {
     window.history.replaceState(null, "", "/");
     window.localStorage.clear();
+    Object.defineProperty(window.navigator, "clipboard", {
+      configurable: true,
+      value: undefined
+    });
+    Object.defineProperty(window.navigator, "share", {
+      configurable: true,
+      value: undefined
+    });
     delete window.gtag;
     delete window.dataLayer;
   });
@@ -159,6 +167,47 @@ describe("App", () => {
     });
 
     expect(screen.getByRole("button", { name: "打开 Markdown" })).toBeInTheDocument();
+  });
+
+  it("lets users switch the whole site visual style without changing layout controls", () => {
+    const document = createMarkdownDocument("demo.md", "# Title\nOld copy\n");
+
+    render(<App fileAccessSupported initialDocument={document} />);
+
+    const appShell = screen.getByRole("main");
+    const reader = screen.getByLabelText("Rendered Markdown");
+    expect(appShell).toHaveAttribute("data-design-style", "soul-design-md");
+    expect(appShell).toHaveClass("design-soul-design-md");
+    expect(reader).toHaveAttribute("data-design-style", "soul-design-md");
+
+    fireEvent.change(screen.getByRole("combobox", { name: "HTML style" }), {
+      target: { value: "spacex-inspired" }
+    });
+
+    expect(appShell).toHaveAttribute("data-design-style", "spacex-inspired");
+    expect(appShell).toHaveClass("design-spacex-inspired");
+    expect(reader).toHaveAttribute("data-design-style", "spacex-inspired");
+    expect(screen.getByRole("heading", { name: "Title" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /edit section title/i })).toBeInTheDocument();
+  });
+
+  it("copies the public demo URL from the share button when Web Share is unavailable", async () => {
+    window.localStorage.setItem("htmlxmarkdown.guideSeen.v1", "true");
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    window.gtag = vi.fn();
+    Object.defineProperty(window.navigator, "clipboard", {
+      configurable: true,
+      value: { writeText }
+    });
+
+    render(<App fileAccessSupported />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Share" }));
+
+    expect(await screen.findByText("Demo link copied")).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith("https://htmlxmarkdown.com/?demo=1");
+    expect(window.gtag).toHaveBeenCalledWith("event", "share_clicked", { target: "demo" });
+    expect(window.gtag).toHaveBeenCalledWith("event", "share_succeeded", { method: "clipboard", target: "demo" });
   });
 
   it("opens a section editor and applies source edits back to rendered Markdown", () => {

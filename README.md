@@ -43,6 +43,11 @@ People need layout, hierarchy, and visual scanning to catch whether a document r
 
 Read the short-form note: [HTML is for humans, Markdown is for agents](docs/html-is-for-humans-markdown-is-for-agents.md).
 
+## Roadmap
+
+The current product direction is documented in [HTMLxMarkdown Roadmap](docs/roadmap.md).
+The launch measurement plan is documented in [HTMLxMarkdown Analytics Dashboard](docs/analytics-dashboard.md).
+
 ## Local Development
 
 ```bash

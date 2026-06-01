@@ -2,23 +2,26 @@
 
 ## 中文
 
-我做了一个小工具：HTMLxMarkdown。
+我做了一个小工具，已经发布上线。
+https://htmlxmarkdown.com
 
-它解决的是一个很具体的问题：Markdown 适合给 Agent、脚本、版本控制和各种工具继续处理，但人类在审阅长文档时，更需要一个干净的 HTML 阅读界面。
+它解决的是当人需要阅读和修改复杂超长Markdown时，因为Markdown原文格式不易读导致的难以修改，不容易改对的问题。
+
+思路源自 claudecode 员工提出的 HTML is new Markdown 的话题，但我认为他们不是替换关系。
+
+Markdown 适合给 Agent、脚本、版本控制和各种工具继续处理，但人类在审阅长文档时，需要一个直观易操作的 HTML 阅读界面。
 
 所以 HTMLxMarkdown 不尝试替代 Markdown。它把两件事分开：
 
-- Markdown 仍然是 source of truth。
-- HTML 负责给人阅读、检查和监督。
-- 修改时回到原始 Markdown，并按段落保存。
-
+Markdown 仍然是源头。
+HTML 负责给人阅读、检查和监督。
+修改时保存回原始 Markdown。
 适合用来审阅 AI 生成的 README、Prompt、策略文档、Skill 文件、产品说明，或者任何不想被富文本编辑器改乱的 Markdown。
 
-可以直接试 demo：
-
+可以直接尝试 demo：
 https://htmlxmarkdown.com/?demo=1
 
-这是一个很薄的 MVP。如果你在真实工作流里遇到卡点，欢迎直接反馈：
+这是一个 MVP 版本。如果你有相关的真实场景，问题，需求，想法，欢迎直接找我聊～
 
 https://github.com/Tangc/htmlxmarkdown/issues/new?template=feedback.yml
 

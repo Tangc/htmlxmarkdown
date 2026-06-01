@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Save,
   SaveAll,
+  Share2,
   Sparkles,
   X
 } from "lucide-react";
@@ -23,6 +24,12 @@ import {
   saveBlockDraft,
   type MarkdownDocument
 } from "./domain/markdownDocument";
+import {
+  defaultDesignStyleId,
+  designStyleOptions,
+  getDesignStyleOption,
+  type DesignStyleId
+} from "./domain/designStyles";
 import {
   isFileSystemAccessSupported,
   openMarkdownFile,
@@ -48,7 +55,9 @@ type StatusKey =
   | "saveCancelled"
   | "couldNotSaveFile"
   | "sectionApplied"
-  | "sectionEditCancelled";
+  | "sectionEditCancelled"
+  | "shareCopied"
+  | "shareFailed";
 
 type StaticStatusKey = Exclude<StatusKey, "opened" | "saved">;
 
@@ -77,6 +86,7 @@ const defaultFeedbackUrl =
 
 const guideSourceUrl = "https://www.lennysnewsletter.com/p/html-is-the-new-markdown-how-anthropic";
 const demoVideoUrl = "/htmlxmarkdown-demo.mp4";
+const publicDemoUrl = "https://htmlxmarkdown.com/?demo=1";
 const guideSeenStorageKey = "htmlxmarkdown.guideSeen.v1";
 
 const complexSampleFileName = "guizang-ppt-skill.SKILL.md";
@@ -162,11 +172,13 @@ export default function App({
   const [statusFileName, setStatusFileName] = useState<string | null>(openedFromDemoUrl ? complexSampleFileName : null);
   const [guideOpen, setGuideOpen] = useState(() => !openedFromDemoUrl && !hasSeenGuide());
   const [busy, setBusy] = useState(false);
+  const [designStyleId, setDesignStyleId] = useState<DesignStyleId>(defaultDesignStyleId);
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
     [document, selectedBlockId]
   );
+  const selectedDesignStyle = getDesignStyleOption(designStyleId);
 
   useEffect(() => {
     if (openedFromDemoUrl) trackEvent("demo_opened", { source: "url" });
@@ -188,8 +200,8 @@ export default function App({
 
   function getStatusText() {
     if (document?.dirty) return copy.unsavedChanges;
-    if (statusFileName && status === "opened") return copy.opened(statusFileName);
-    if (statusFileName && status === "saved") return copy.saved(statusFileName);
+    if (status === "opened") return statusFileName ? copy.opened(statusFileName) : copy.ready;
+    if (status === "saved") return statusFileName ? copy.saved(statusFileName) : copy.ready;
     return copy[status as StaticStatusKey];
   }
 
@@ -330,10 +342,42 @@ export default function App({
     trackEvent("reset_document", { had_document: Boolean(document) });
   }
 
+  async function shareDemo() {
+    trackEvent("share_clicked", { target: "demo" });
+    setStatusFileName(null);
+
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        await navigator.share({
+          title: "HTMLxMarkdown",
+          text: copy.shareText,
+          url: publicDemoUrl
+        });
+        setStatus("shareCopied");
+        trackEvent("share_succeeded", { method: "web_share", target: "demo" });
+        return;
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(publicDemoUrl);
+        setStatus("shareCopied");
+        trackEvent("share_succeeded", { method: "clipboard", target: "demo" });
+        return;
+      }
+
+      setStatus("shareFailed");
+      trackEvent("share_failed", { reason: "unsupported", target: "demo" });
+    } catch (error) {
+      const eventName = error instanceof DOMException && error.name === "AbortError" ? "share_cancelled" : "share_failed";
+      setStatus(eventName === "share_cancelled" ? "ready" : "shareFailed");
+      trackEvent(eventName, { target: "demo" });
+    }
+  }
+
   function renderLanguageSelect() {
     return (
       <select
-        className="language-select"
+        className="toolbar-select"
         aria-label={copy.language}
         value={language}
         onChange={(event) => setLanguage(event.target.value as Language)}
@@ -344,9 +388,34 @@ export default function App({
     );
   }
 
+  function renderDesignStyleSelect() {
+    return (
+      <select
+        className="toolbar-select style-select"
+        aria-label={copy.htmlStyle}
+        value={designStyleId}
+        onChange={(event) => {
+          const nextStyleId = event.target.value as DesignStyleId;
+          setDesignStyleId(nextStyleId);
+          trackEvent("design_style_changed", { design_style: nextStyleId });
+        }}
+      >
+        {designStyleOptions.map((style) => (
+          <option key={style.id} value={style.id}>
+            {style.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   if (!fileAccessSupported && !document) {
     return (
-      <main className="unsupported-shell" lang={language}>
+      <main
+        className={`unsupported-shell ${selectedDesignStyle.cssClass}`}
+        lang={language}
+        data-design-style={selectedDesignStyle.id}
+      >
         <section className="unsupported-panel">
           <FileText aria-hidden="true" size={36} />
           <h1>{copy.fileAccessTitle}</h1>
@@ -377,7 +446,11 @@ export default function App({
   }
 
   return (
-    <main className="app-shell" lang={language}>
+    <main
+      className={`app-shell ${selectedDesignStyle.cssClass}`}
+      lang={language}
+      data-design-style={selectedDesignStyle.id}
+    >
       <header className="toolbar">
         <div className="brand">
           <FileText aria-hidden="true" size={22} />
@@ -408,10 +481,15 @@ export default function App({
             <Sparkles aria-hidden="true" size={18} />
             {copy.testSample}
           </button>
+          <button className="tool-button" type="button" onClick={shareDemo}>
+            <Share2 aria-hidden="true" size={18} />
+            {copy.share}
+          </button>
           <button className="tool-button" type="button" onClick={resetDocument} disabled={!document || busy}>
             <RotateCcw aria-hidden="true" size={18} />
             {copy.reset}
           </button>
+          {renderDesignStyleSelect()}
           {renderLanguageSelect()}
           <a
             className="tool-button link-button"
@@ -451,7 +529,11 @@ export default function App({
           )}
         </aside>
 
-        <section className="reader-panel" aria-label={copy.renderedMarkdown}>
+        <section
+          className="reader-panel"
+          aria-label={copy.renderedMarkdown}
+          data-design-style={selectedDesignStyle.id}
+        >
           {document ? (
             document.blocks.map((block) => (
               <article

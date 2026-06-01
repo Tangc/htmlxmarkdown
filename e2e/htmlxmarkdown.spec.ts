@@ -132,6 +132,38 @@ test("lets users switch the interface to Simplified Chinese", async ({ page }) =
   await expect(page.getByText("打开本地 Markdown 文件")).toBeVisible();
 });
 
+test("lets users switch HTML style and copy the public demo share URL", async ({ page }) => {
+  await skipUsageGuide(page);
+  await mockFileAccess(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        async writeText(text: string) {
+          Object.defineProperty(window, "__htmlxCopiedText", {
+            configurable: true,
+            value: text
+          });
+        }
+      }
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open Markdown" }).click();
+
+  await expect(page.locator("main")).toHaveAttribute("data-design-style", "soul-design-md");
+  await page.getByLabel("HTML style").selectOption("spacex-inspired");
+  await expect(page.locator("main")).toHaveAttribute("data-design-style", "spacex-inspired");
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Share" }).click();
+  await expect(page.getByText("Demo link copied")).toBeVisible();
+  await expect(page.evaluate(() => (window as unknown as { __htmlxCopiedText: string }).__htmlxCopiedText)).resolves.toBe(
+    "https://htmlxmarkdown.com/?demo=1"
+  );
+});
+
 test("handles the Guizang PPT skill as a real long Chinese Markdown sample", async ({ page }) => {
   await skipUsageGuide(page);
   const source = await readFile("samples/guizang-ppt-skill.SKILL.md", "utf8");

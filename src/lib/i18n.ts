@@ -27,6 +27,7 @@ export type Copy = DynamicCopy & {
   guideDetail: string;
   guideSource: string;
   guideTitle: string;
+  htmlStyle: string;
   language: string;
   languageEnglish: string;
   languageSimplifiedChinese: string;
@@ -51,6 +52,10 @@ export type Copy = DynamicCopy & {
   sectionEditor: string;
   sectionMarkdownSource: string;
   sections: string;
+  share: string;
+  shareCopied: string;
+  shareFailed: string;
+  shareText: string;
   testSample: string;
   unsavedChanges: string;
   usage: string;
@@ -82,6 +87,7 @@ export const copies: Record<Language, Copy> = {
       "Use Test sample to try a complex Markdown document without selecting a local file. Use Reset to return to the unopened state.",
     guideSource: "Background: HTML is the new Markdown",
     guideTitle: "How to use HTMLxMarkdown",
+    htmlStyle: "HTML style",
     language: "Language",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
@@ -107,6 +113,10 @@ export const copies: Record<Language, Copy> = {
     sectionEditor: "Section editor",
     sectionMarkdownSource: "Section Markdown source",
     sections: "Sections",
+    share: "Share",
+    shareCopied: "Demo link copied",
+    shareFailed: "Could not share link",
+    shareText: "Try HTMLxMarkdown: read Markdown as polished HTML, edit by section, and keep Markdown as the source of truth.",
     testSample: "Test sample",
     unsavedChanges: "Unsaved changes",
     usage: "Usage",
@@ -137,6 +147,7 @@ export const copies: Record<Language, Copy> = {
     guideDetail: "可以用“测试样例”直接体验复杂 Markdown，不需要选择本地文件。用“恢复初始状态”回到未打开状态。",
     guideSource: "背景：HTML is the new Markdown",
     guideTitle: "如何使用 HTMLxMarkdown",
+    htmlStyle: "HTML 样式",
     language: "语言",
     languageEnglish: "English",
     languageSimplifiedChinese: "简体中文",
@@ -161,6 +172,10 @@ export const copies: Record<Language, Copy> = {
     sectionEditor: "章节编辑器",
     sectionMarkdownSource: "章节 Markdown 源文",
     sections: "章节",
+    share: "分享",
+    shareCopied: "Demo 链接已复制",
+    shareFailed: "无法分享链接",
+    shareText: "试试 HTMLxMarkdown：用漂亮的 HTML 阅读 Markdown，按章节编辑，并让 Markdown 继续作为源文件。",
     testSample: "测试样例",
     unsavedChanges: "有未保存修改",
     usage: "使用说明",
